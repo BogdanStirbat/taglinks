@@ -25,3 +25,4 @@
 /.nb-gradle/
 
 test.db.mv.db
+test.db.trace.db

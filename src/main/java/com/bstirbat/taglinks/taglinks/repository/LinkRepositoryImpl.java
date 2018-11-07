@@ -50,7 +50,7 @@ public class LinkRepositoryImpl implements LinkRepository {
 
     @Override
     public List<LinkEntity> findAll() {
-        return entityManager.createQuery("select l form LinkEntity l", LinkEntity.class)
+        return entityManager.createQuery("select l from LinkEntity l", LinkEntity.class)
                 .getResultList();
     }
 }
