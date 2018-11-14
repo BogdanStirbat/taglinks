@@ -70,7 +70,6 @@ $(document).ready(function() {
 
     $(document).on("click", ".popup-new-link-close", function(e) {
         resetAddNewLink($(this));
-        $("#add_new_link_error").html('');
         return false;
     });
 
@@ -98,6 +97,72 @@ $(document).ready(function() {
         });
         return false;
     });
+
+    function resetAddNewLink(domElement) {
+        var innerHtml = '';
+        innerHtml += '<div class="new_link">';
+        innerHtml += '<p>Add a new link.</p>';
+        innerHtml += '</div>';
+        domElement.parent().parent().removeClass("selected");
+        domElement.parent().html(innerHtml);
+    }
+
+    $(document).on("click", ".new_tag", function(e) {
+        if ($(this).hasClass("selected")) {
+            return false;
+        }
+
+        $(this).addClass("selected");
+        var innerHtml = '';
+        innerHtml += '<div class="add_tag_popup">';
+        innerHtml += '<label>Name: </label>  <input name="name" id="name" type="text">';
+        innerHtml += '<br>';
+        innerHtml += '<button class="popup-new-tag-close">Close</button>';
+        innerHtml += '<button class="popup-new-tag-add">Add</button>';
+        innerHtml += '<div id="add_new_tag_error" class="error"></div>'
+        innerHtml += '</div>';
+        $(this).html(innerHtml);
+
+        return false;
+    });
+
+    $(document).on("click", ".popup-new-tag-close", function(e) {
+        resetAddNewTag($(this));
+        return false;
+    });
+
+    $(document).on("click", ".popup-new-tag-add", function(e) {
+        var initialContext = $(this);
+        var name = $("#name").val();
+        if (name.length == 0) {
+            $("#add_new_tag_error").html('<p>Name cannot be empty!</p>');
+            return false;
+        }
+        $.ajax({
+            url: "http://localhost:8080/tag",
+            type: 'POST',
+            data: JSON.stringify({"name": name}),
+            contentType: "application/json",
+            dataType: 'json',
+            success: function(data) {
+                loadAllTags();
+                resetAddNewTag(initialContext);
+            },
+            error: function() {
+                $("#add_new_tag_error").html('<p>An error ocurred submitting data.</p>');
+            }
+        });
+        return false;
+    });
+
+    function resetAddNewTag(domElement) {
+        var innerHtml = '';
+        innerHtml += '<div class="new_tag">';
+        innerHtml += '<p>Add a new tag.</p>';
+        innerHtml += '</div>';
+        domElement.parent().parent().removeClass("selected");
+        domElement.parent().html(innerHtml);
+    }
 
     function loadAllLinks() {
         $.ajax({
@@ -171,12 +236,4 @@ $(document).ready(function() {
         });
     }
 
-    function resetAddNewLink(domElement) {
-        var innerHtml = '';
-        innerHtml += '<div class="new_link">';
-        innerHtml += '<p>Add a new link.</p>';
-        innerHtml += '</div>';
-        domElement.parent().parent().removeClass("selected");
-        domElement.parent().html(innerHtml);
-    }
 });
