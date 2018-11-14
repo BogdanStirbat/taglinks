@@ -15,6 +15,8 @@ $(document).ready(function() {
         popup += '<p>' + url + '</p>'
         popup += '<p>' + description + '</p>'
         popup += '<button class="popup-close" data-type="link">Close</button>';
+        popup += '<button class="popup-link-delete">Delete</button>';
+        popup += '<div id="delete_link_error" class="error"></div>'
         popup += '</div>';
         popup += '</div>';
         loadTagsForLink(id);
@@ -29,10 +31,36 @@ $(document).ready(function() {
         popup += '<div class="popup-content">';
         popup += '<p>' + name + '</p>'
         popup += '<button class="popup-close" data-type="tag">Close</button>';
+        popup += '<button class="popup-tag-delete">Delete</button>';
         popup += '</div>';
         popup += '</div>';
         loadLinksForTag(id);
         $(this).append(popup);
+    });
+
+    $(document).on("click", ".popup-link-delete", function(e) {
+        e.preventDefault();
+        var initialContext = $(this);
+        var id = $(this).parent().parent().parent().data("id");
+        var name = $(this).parent().parent().parent().data("name");
+        $.ajax({
+            url: 'http://localhost:8080/link/' + id,
+            type: 'DELETE',
+            dataType: 'json',
+            contentType: "application/json",
+            success: function(data) {
+                loadAllLinks();
+                //resetAddNewLink(initialContext);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                $("#delete_link_error").html('<p>An error has ocurred.</p>');
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+            }
+        });
+
+        return false;
     });
 
     $(document).on("click", ".popup-close", function(e) {
@@ -91,8 +119,11 @@ $(document).ready(function() {
                 loadAllLinks();
                 resetAddNewLink(initialContext);
             },
-            error: function() {
+            error: function(jqXHR, textStatus, errorThrown) {
                 $("#add_new_link_error").html('<p>An error ocurred submitting data.</p>');
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
             }
         });
         return false;
@@ -148,8 +179,11 @@ $(document).ready(function() {
                 loadAllTags();
                 resetAddNewTag(initialContext);
             },
-            error: function() {
+            error: function(jqXHR, textStatus, errorThrown) {
                 $("#add_new_tag_error").html('<p>An error ocurred submitting data.</p>');
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
             }
         });
         return false;
@@ -172,8 +206,11 @@ $(document).ready(function() {
             success: function(data) {
                 computeAndAppendHtmlForLinks(data);
             },
-            error: function() {
+            error: function(jqXHR, textStatus, errorThrown) {
                 console.log('Error.');
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
             }
         });
     }
@@ -186,8 +223,11 @@ $(document).ready(function() {
             success: function(data) {
                 computeAndAppendHtmlForTags(data);
             },
-            error: function() {
+            error: function(jqXHR, textStatus, errorThrown) {
                 console.log('Error.');
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
             }
         });
     }
@@ -216,8 +256,11 @@ $(document).ready(function() {
             success: function(data) {
                 computeAndAppendHtmlForTags(data);
             },
-            error: function() {
+            error: function(jqXHR, textStatus, errorThrown) {
                 console.log('Error.');
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
             }
         });
     }
@@ -230,8 +273,11 @@ $(document).ready(function() {
             success: function(data) {
                 computeAndAppendHtmlForLinks(data);
             },
-            error: function() {
+            error: function(jqXHR, textStatus, errorThrown) {
                 console.log('Error.');
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
             }
         });
     }
