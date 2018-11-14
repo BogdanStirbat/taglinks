@@ -48,6 +48,57 @@ $(document).ready(function() {
         return false;
     });
 
+    $(document).on("click", ".new_link", function(e) {
+        if ($(this).hasClass("selected")) {
+            return false;
+        }
+
+        $(this).addClass("selected");
+        var innerHtml = '';
+        innerHtml += '<div class="add_link_popup">';
+        innerHtml += '<label>Url: </label>  <input name="url" id="url" type="text">';
+        innerHtml += '<label>Description: </label>  <input name="description" id="description" type="text">';
+        innerHtml += '<br>';
+        innerHtml += '<button class="popup-new-link-close">Close</button>';
+        innerHtml += '<button class="popup-new-link-add">Add</button>';
+        innerHtml += '<div id="add_new_link_error" class="error"></div>'
+        innerHtml += '</div>';
+        $(this).html(innerHtml);
+
+        return false;
+    });
+
+    $(document).on("click", ".popup-new-link-close", function(e) {
+        resetAddNewLink($(this));
+        $("#add_new_link_error").html('');
+        return false;
+    });
+
+    $(document).on("click", ".popup-new-link-add", function(e) {
+        var initialContext = $(this);
+        var url = $("#url").val();
+        var description = $("#description").val();
+        if (url.length == 0) {
+            $("#add_new_link_error").html('<p>Url cannot be empty!</p>');
+            return false;
+        }
+        $.ajax({
+            url: "http://localhost:8080/link",
+            type: 'POST',
+            data: JSON.stringify({"url": url, "description": description}),
+            contentType: "application/json",
+            dataType: 'json',
+            success: function(data) {
+                loadAllLinks();
+                resetAddNewLink(initialContext);
+            },
+            error: function() {
+                $("#add_new_link_error").html('<p>An error ocurred submitting data.</p>');
+            }
+        });
+        return false;
+    });
+
     function loadAllLinks() {
         $.ajax({
             url: "http://localhost:8080/link/all",
@@ -118,5 +169,14 @@ $(document).ready(function() {
                 console.log('Error.');
             }
         });
+    }
+
+    function resetAddNewLink(domElement) {
+        var innerHtml = '';
+        innerHtml += '<div class="new_link">';
+        innerHtml += '<p>Add a new link.</p>';
+        innerHtml += '</div>';
+        domElement.parent().parent().removeClass("selected");
+        domElement.parent().html(innerHtml);
     }
 });
