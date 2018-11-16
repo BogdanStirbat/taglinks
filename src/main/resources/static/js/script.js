@@ -32,6 +32,7 @@ $(document).ready(function() {
         popup += '<p>' + name + '</p>'
         popup += '<button class="popup-close" data-type="tag">Close</button>';
         popup += '<button class="popup-tag-delete">Delete</button>';
+        popup += '<div id="delete_tag_error" class="error"></div>'
         popup += '</div>';
         popup += '</div>';
         loadLinksForTag(id);
@@ -50,10 +51,33 @@ $(document).ready(function() {
             contentType: "application/json",
             success: function(data) {
                 loadAllLinks();
-                //resetAddNewLink(initialContext);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 $("#delete_link_error").html('<p>An error has ocurred.</p>');
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+            }
+        });
+
+        return false;
+    });
+
+    $(document).on("click", ".popup-tag-delete", function(e) {
+        e.preventDefault();
+        var initialContext = $(this);
+        var id = $(this).parent().parent().parent().data("id");
+        $.ajax({
+            url: 'http://localhost:8080/tag/' + id,
+            type: 'DELETE',
+            dataType: 'json',
+            contentType: "application/json",
+            success: function(data) {
+                loadAllTags();
+                loadAllLinks();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                $("#delete_tag_error").html('<p>An error has ocurred.</p>');
                 console.log(jqXHR);
                 console.log(textStatus);
                 console.log(errorThrown);
