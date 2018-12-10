@@ -1,8 +1,10 @@
 $(document).ready(function() {
 
     loadAllLinks();
-
     loadAllTags();
+
+    var add_new_tag_html = '<p>Add a new tag.</p>';
+    var add_new_link_html = '<p>Add a new link.</p>';
 
     $(document).on("click", ".li_item", function(e) {
         e.preventDefault();
@@ -21,6 +23,9 @@ $(document).ready(function() {
         popup += '</div>';
         loadTagsForLink(id);
         $(this).append(popup);
+        add_new_tag_html = '<p>Add a new tag for this link.</p>';
+        $("#new_tag").html(add_new_tag_html);
+        return false;
     });
 
     $(document).on("click", ".li_tag", function(e) {
@@ -37,6 +42,9 @@ $(document).ready(function() {
         popup += '</div>';
         loadLinksForTag(id);
         $(this).append(popup);
+        add_new_link_html = '<p>Add a new link for this tag.</p>';
+        $("#new_link").html(add_new_link_html);
+        return false;
     });
 
     $(document).on("click", ".popup-link-delete", function(e) {
@@ -91,16 +99,16 @@ $(document).ready(function() {
         e.preventDefault();
         var type = $(this).data("type");
         if (type == 'link') {
-            loadAllTags();
+            deselectLink();
         }
         if (type == 'tag') {
-            loadAllLinks();
+            deselectTag();
         }
         $(this).parent().parent().remove();
         return false;
     });
 
-    $(document).on("click", ".new_link", function(e) {
+    $(document).on("click", "#new_link", function(e) {
         if ($(this).hasClass("selected")) {
             return false;
         }
@@ -155,14 +163,14 @@ $(document).ready(function() {
 
     function resetAddNewLink(domElement) {
         var innerHtml = '';
-        innerHtml += '<div class="new_link">';
-        innerHtml += '<p>Add a new link.</p>';
+        innerHtml += '<div id="new_link">';
+        innerHtml += add_new_link_html;
         innerHtml += '</div>';
         domElement.parent().parent().removeClass("selected");
         domElement.parent().html(innerHtml);
     }
 
-    $(document).on("click", ".new_tag", function(e) {
+    $(document).on("click", "#new_tag", function(e) {
         if ($(this).hasClass("selected")) {
             return false;
         }
@@ -215,8 +223,8 @@ $(document).ready(function() {
 
     function resetAddNewTag(domElement) {
         var innerHtml = '';
-        innerHtml += '<div class="new_tag">';
-        innerHtml += '<p>Add a new tag.</p>';
+        innerHtml += '<div id="new_tag">';
+        innerHtml += add_new_tag_html;
         innerHtml += '</div>';
         domElement.parent().parent().removeClass("selected");
         domElement.parent().html(innerHtml);
@@ -304,6 +312,18 @@ $(document).ready(function() {
                 console.log(errorThrown);
             }
         });
+    }
+
+    function deselectLink() {
+        loadAllTags();
+        add_new_tag_html = '<p>Add a new tag.</p>';
+        $("#new_tag").html(add_new_tag_html);
+    }
+
+    function deselectTag() {
+        loadAllLinks();
+        add_new_link_html = '<p>Add a new link.</p>'
+        $("#new_link").html(add_new_link_html);
     }
 
 });
