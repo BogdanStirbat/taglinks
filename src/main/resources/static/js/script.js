@@ -1,5 +1,14 @@
 $(document).ready(function() {
 
+    var allLinksList = [];
+    var allTagsList = [];
+
+    var selectedLinksList = [];
+    var selectedTagsList = [];
+
+    var selectedLinkId = -1;
+    var selectedTagId = -1;
+
     loadAllLinks();
     loadAllTags();
 
@@ -11,6 +20,7 @@ $(document).ready(function() {
         var id = $(this).data("id");
         var url = $(this).data("url");
         var description = $(this).data("description");
+        selectedLinkId = id;
         var popup = '';
         popup += '<div class="popup">';
         popup += '<div class="popup-content">';
@@ -31,6 +41,7 @@ $(document).ready(function() {
     $(document).on("click", ".li_tag", function(e) {
         var id = $(this).data("id");
         var name = $(this).data("name");
+        selectedTagId = -1;
         var popup = '';
         popup += '<div class="popup">';
         popup += '<div class="popup-content">';
@@ -43,6 +54,8 @@ $(document).ready(function() {
         loadLinksForTag(id);
         $(this).append(popup);
         add_new_link_html = '<p>Add a new link for this tag.</p>';
+        var notSelectedLinks = computeListOfLinksNotForCurrentTag();
+        console.log(notSelectedLinks);
         $("#new_link").html(add_new_link_html);
         return false;
     });
@@ -175,6 +188,10 @@ $(document).ready(function() {
             return false;
         }
 
+        if (add_new_tag_html == '<p>Add a new tag for this link.</p>') {
+            return false;
+        }
+
         $(this).addClass("selected");
         var innerHtml = '';
         innerHtml += '<div class="add_tag_popup">';
@@ -221,6 +238,27 @@ $(document).ready(function() {
         return false;
     });
 
+    $(document).on("click", ".add-tag-to-list", function(e) {
+        var tagId = $("#selectTag").val();
+        $.ajax({
+            url: "http://localhost:8080/linktag",
+            type: 'POST',
+            data: JSON.stringify({"linkId": selectedLinkId, "tagId": tagId}),
+            contentType: "application/json",
+            dataType: 'json',
+            success: function(data) {
+                $("#new_tag").html(add_new_tag_html);
+                loadTagsForLink(selectedLinkId);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                $("#add_new_tag_error").html('<p>An error ocurred submitting data.</p>');
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+            }
+        });
+    });
+
     function resetAddNewTag(domElement) {
         var innerHtml = '';
         innerHtml += '<div id="new_tag">';
@@ -236,6 +274,7 @@ $(document).ready(function() {
             type: 'GET',
             dataType: 'json',
             success: function(data) {
+                allLinksList = data;
                 computeAndAppendHtmlForLinks(data);
             },
             error: function(jqXHR, textStatus, errorThrown) {
@@ -253,7 +292,45 @@ $(document).ready(function() {
             type: 'GET',
             dataType: 'json',
             success: function(data) {
+                allTagsList = data;
                 computeAndAppendHtmlForTags(data);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.log('Error.');
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+            }
+        });
+    }
+
+    function loadTagsForLink(link_id) {
+        $.ajax({
+            url: 'http://localhost:8080/linktag/all/link/' + link_id,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                selectedTagsList = data;
+                computeAndAppendHtmlForTags(data);
+                appendOptionsForTagsNotForCurrentLink();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.log('Error.');
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+            }
+        });
+    }
+
+    function loadLinksForTag(tag_id) {
+        $.ajax({
+            url: 'http://localhost:8080/linktag/all/tag/' + tag_id,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                selectedLinksList = data;
+                computeAndAppendHtmlForLinks(data);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.log('Error.');
@@ -280,38 +357,52 @@ $(document).ready(function() {
         $('#list_tags').html(urlsHtml);
     }
 
-    function loadTagsForLink(link_id) {
-        $.ajax({
-            url: 'http://localhost:8080/linktag/all/link/' + link_id,
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                computeAndAppendHtmlForTags(data);
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.log('Error.');
-                console.log(jqXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
+    function computeListOfTagsNotForCurrentLink() {
+        var result = [];
+        for (var i = 0; i < allTagsList.length; i++) {
+            var tag = allTagsList[i];
+            var existsInSelect = false;
+            for (var j = 0; j < selectedTagsList.length; j++) {
+                var selectedTag = selectedTagsList[j];
+                if (tag.id == selectedTag.id) {
+                    existsInSelect = true;
+                    break;
+                }
             }
-        });
+            if (!existsInSelect) {
+                result.push(tag);
+            }
+        }
+        return result;
     }
 
-    function loadLinksForTag(tag_id) {
-        $.ajax({
-            url: 'http://localhost:8080/linktag/all/tag/' + tag_id,
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                computeAndAppendHtmlForLinks(data);
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.log('Error.');
-                console.log(jqXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
+    function appendOptionsForTagsNotForCurrentLink() {
+        var notSelectedTags = computeListOfTagsNotForCurrentLink();
+        var optionsHtml = '<select name="selectTag" id="selectTag">';
+        for(var i = 0; i < notSelectedTags.length; i++) {
+            var tag = notSelectedTags[i];
+            optionsHtml += '<option value="' + tag.id + '">' + tag.name + '</option>';
+        }
+        optionsHtml += "</select>";
+        $("#new_tag").append(optionsHtml);
+        $("#new_tag").append('<button class="add-tag-to-list">Add</button>');
+    }
+
+    function computeListOfLinksNotForCurrentTag() {
+        var result = [];
+        for (link in allLinksList) {
+            var existsInSelect = false;
+            for (selectedLink in selectedLinksList) {
+                if (link.id == selectedLink.id) {
+                    existsInSelect = true;
+                    break;
+                }
             }
-        });
+            if (!existsInSelect) {
+                result.push(link);
+            }
+        }
+        return result;
     }
 
     function deselectLink() {
