@@ -28,7 +28,7 @@ $(document).ready(function() {
         popup += '<p>' + description + '</p>'
         popup += '<button class="popup-close" data-type="link">Close</button>';
         popup += '<button class="popup-link-delete">Delete</button>';
-        popup += '<div id="delete_link_error" class="error"></div>'
+        popup += '<div id="delete_link_error" class="error"></div>';
         popup += '</div>';
         popup += '</div>';
         loadTagsForLink(id);
@@ -51,11 +51,13 @@ $(document).ready(function() {
         popup += '<div id="delete_tag_error" class="error"></div>'
         popup += '</div>';
         popup += '</div>';
-        loadLinksForTag(id);
         $(this).append(popup);
-        add_new_link_html = '<p>Add a new link for this tag.</p>';
+        if (isALinkSelected()) {
+            return false;
+        }
+        loadLinksForTag(id);
+        add_new_link_html = '<p>Links associated with this tag.</p>';
         var notSelectedLinks = computeListOfLinksNotForCurrentTag();
-        console.log(notSelectedLinks);
         $("#new_link").html(add_new_link_html);
         return false;
     });
@@ -87,9 +89,19 @@ $(document).ready(function() {
     $(document).on("click", ".popup-tag-delete", function(e) {
         e.preventDefault();
         var initialContext = $(this);
-        var id = $(this).parent().parent().parent().data("id");
+        var tagId = $(this).parent().parent().parent().data("id");
+        if (isALinkSelected()) {
+            deleteLinkTag(selectedLinkId, tagId);
+        } else {
+            deleteTag(tagId);
+        }
+
+        return false;
+    });
+
+    function deleteTag(tagId) {
         $.ajax({
-            url: 'http://localhost:8080/tag/' + id,
+            url: 'http://localhost:8080/tag/' + tagId,
             type: 'DELETE',
             dataType: 'json',
             contentType: "application/json",
@@ -104,9 +116,31 @@ $(document).ready(function() {
                 console.log(errorThrown);
             }
         });
+    }
 
-        return false;
-    });
+    function deleteLinkTag(linkId, tagId) {
+        $.ajax({
+            url: 'http://localhost:8080/linktag/link/' + linkId + '/tag/' + tagId,
+            type: 'DELETE',
+            dataType: 'json',
+            contentType: "application/json",
+            success: function(data) {
+                if (isALinkSelected) {
+                    $("#selectTag").remove();
+                    $(".add-tag-to-list").remove();
+                    loadTagsForLink(selectedLinkId);
+                } else {
+                    loadAllLinks();
+                    loadAllTags();
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+            }
+        });
+    }
 
     $(document).on("click", ".popup-close", function(e) {
         e.preventDefault();
@@ -115,6 +149,10 @@ $(document).ready(function() {
             deselectLink();
         }
         if (type == 'tag') {
+            if (isALinkSelected()) {
+                $(this).parent().parent().remove();
+                return false;
+            }
             deselectTag();
         }
         $(this).parent().parent().remove();
@@ -123,6 +161,10 @@ $(document).ready(function() {
 
     $(document).on("click", "#new_link", function(e) {
         if ($(this).hasClass("selected")) {
+            return false;
+        }
+
+        if (isATagSelected()) {
             return false;
         }
 
@@ -188,7 +230,7 @@ $(document).ready(function() {
             return false;
         }
 
-        if (add_new_tag_html == '<p>Add a new tag for this link.</p>') {
+        if (isALinkSelected()) {
             return false;
         }
 
@@ -413,8 +455,16 @@ $(document).ready(function() {
 
     function deselectTag() {
         loadAllLinks();
-        add_new_link_html = '<p>Add a new link.</p>'
+        add_new_link_html = '<p>Add a new link.</p>';
         $("#new_link").html(add_new_link_html);
+    }
+
+    function isATagSelected() {
+        return add_new_link_html == '<p>Links associated with this tag.</p>';
+    }
+
+    function isALinkSelected() {
+        return add_new_tag_html == '<p>Add a new tag for this link.</p>';
     }
 
 });

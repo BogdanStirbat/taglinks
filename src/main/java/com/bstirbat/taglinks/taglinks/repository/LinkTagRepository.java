@@ -18,6 +18,8 @@ public interface LinkTagRepository {
 
     void delete(LinkTagEntity linkTagEntity);
 
+    void delete(long linkId, long tagId);
+
     List<TagEntity> allForLink(long linkId);
 
     List<LinkEntity> allForTag(long tagId);

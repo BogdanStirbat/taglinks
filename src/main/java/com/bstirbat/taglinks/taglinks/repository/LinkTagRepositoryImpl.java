@@ -51,6 +51,21 @@ public class LinkTagRepositoryImpl implements LinkTagRepository {
     }
 
     @Override
+    @Transactional
+    public void delete(long linkId, long tagId) {
+        List<LinkTagEntity> linkTagEntities = entityManager.createQuery("select lt from LinkTagEntity lt " +
+                "where lt.linkId=:linkId and lt.tagId=:tagId", LinkTagEntity.class)
+                .setParameter("linkId", linkId)
+                .setParameter("tagId", tagId)
+                .getResultList();
+
+        if (linkTagEntities != null && !linkTagEntities.isEmpty()) {
+            LinkTagEntity linkTagEntity = linkTagEntities.get(0);
+            delete(linkTagEntity);
+        }
+    }
+
+    @Override
     public List<TagEntity> allForLink(long linkId) {
         return entityManager.createQuery(
                 "select te from LinkTagEntity lt " +
